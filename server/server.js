@@ -38,3 +38,10 @@ mongoose.connect(process.env.MONGO_URI)
 .catch(err => {
   console.log("DB ERROR:", err);
 });
+import path from "path";
+
+app.use(express.static("public"));
+
+app.get("*", (req, res) => {
+  res.sendFile(path.resolve("public/index.html"));
+});
