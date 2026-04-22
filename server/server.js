@@ -24,18 +24,17 @@ app.use("/api/kyc", kycRoutes);
 
 // TEST ROUTE
 app.get("/", (req, res) => {
-  res.send("API Running ✅");
+  res.send("API Running...");
 });
 
-// CONNECT TO MONGODB
+// CONNECT DB
 mongoose.connect(process.env.MONGO_URI)
 .then(() => {
-  console.log("MongoDB Connected ✅");
+  console.log("MongoDB Connected");
 
   app.listen(process.env.PORT || 5000, () => {
-    console.log("Server started 🚀");
+    console.log("Server started");
   });
-
 })
 .catch(err => {
   console.log("DB ERROR:", err);
