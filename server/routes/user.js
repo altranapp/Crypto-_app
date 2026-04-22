@@ -1,8 +1,10 @@
-const router = require('express').Router();
-const User = require('../models/User');
+import express from "express";
+import User from "../models/User.js";
+
+const router = express.Router();
 
 // Get balance
-router.get('/balance/:id', async (req, res) => {
+router.get("/balance/:id", async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
     res.json({ balance: user.balance });
@@ -12,7 +14,7 @@ router.get('/balance/:id', async (req, res) => {
 });
 
 // Deposit (demo)
-router.post('/deposit', async (req, res) => {
+router.post("/deposit", async (req, res) => {
   try {
     const { userId, amount } = req.body;
 
@@ -21,7 +23,10 @@ router.post('/deposit', async (req, res) => {
 
     await user.save();
 
-    res.json({ message: "Deposit successful", balance: user.balance });
+    res.json({
+      message: "Deposit successful",
+      balance: user.balance,
+    });
 
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -29,13 +34,13 @@ router.post('/deposit', async (req, res) => {
 });
 
 // Withdraw
-router.post('/withdraw', async (req, res) => {
+router.post("/withdraw", async (req, res) => {
   try {
     const { userId, amount } = req.body;
 
     const user = await User.findById(userId);
 
-    if (user.kycStatus !== 'approved') {
+    if (user.kycStatus !== "approved") {
       return res.status(403).json({ message: "KYC required" });
     }
 
@@ -46,11 +51,14 @@ router.post('/withdraw', async (req, res) => {
     user.balance -= amount;
     await user.save();
 
-    res.json({ message: "Withdrawal successful", balance: user.balance });
+    res.json({
+      message: "Withdrawal successful",
+      balance: user.balance,
+    });
 
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-module.exports = router;
+export default router;
