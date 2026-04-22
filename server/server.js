@@ -1,20 +1,38 @@
-require('dotenv').config();
-const express = require('express');
-const mongoose = require('mongoose');
-const cors = require('cors');
+import express from "express";
+import mongoose from "mongoose";
+import dotenv from "dotenv";
+
+import authRoutes from "./routes/auth.js";
+import userRoutes from "./routes/user.js";
+import adminRoutes from "./routes/admin.js";
+import kycRoutes from "./routes/kyc.js";
+
+dotenv.config();
 
 const app = express();
-app.use(cors());
 app.use(express.json());
 
+// ROUTES
+app.use("/api/auth", authRoutes);
+app.use("/api/user", userRoutes);
+app.use("/api/admin", adminRoutes);
+app.use("/api/kyc", kycRoutes);
+
+// TEST ROUTE
+app.get("/", (req, res) => {
+  res.send("API Running");
+});
+
+// DB CONNECT
 mongoose.connect(process.env.MONGO_URI)
-.then(()=>console.log("DB Connected"))
-.catch(err=>console.log(err));
+.then(() => {
+  console.log("MongoDB Connected");
 
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/user', require('./routes/user'));
-app.use('/api/admin', require('./routes/admin'));
-app.use('/api/kyc', require('./routes/kyc'));
+  app.listen(process.env.PORT || 5000, () => {
+    console.log("Server started");
+  });
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log("Server running on " + PORT));
+})
+.catch(err => {
+  console.log("DB ERROR:", err);
+});
