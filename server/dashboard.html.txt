@@ -1,0 +1,30 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+  <title>Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<h2>Dashboard</h2>
+
+<p id="balance">Balance: Loading...</p>
+
+<h3>Deposit</h3>
+<input id="depositAmount" placeholder="Amount">
+<button onclick="deposit()">Deposit</button>
+
+<h3>Withdraw</h3>
+<input id="withdrawAmount" placeholder="Amount">
+<button onclick="withdraw()">Withdraw</button>
+
+<h3>KYC</h3>
+<input id="name" placeholder="Full Name">
+<input id="country" placeholder="Country">
+<input id="phone" placeholder="Phone">
+<input id="sex" placeholder="Sex">
+<button onclick="submitKYC()">Submit KYC</button>
+
+<script src="app.js"></script>
+</body>
+</html>
