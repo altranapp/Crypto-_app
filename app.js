@@ -1,33 +1,27 @@
 import express from "express";
+import mongoose from "mongoose";
 import cors from "cors";
-import path from "path";
-import { fileURLToPath } from "url";
+import dotenv from "dotenv";
 
-import authRoutes from "./routes/auth.js";
 import userRoutes from "./routes/user.js";
 import adminRoutes from "./routes/admin.js";
 
+dotenv.config();
+
 const app = express();
 
-// Fix __dirname (ESM)
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// Middleware
+// ✅ MIDDLEWARE (must come BEFORE routes)
 app.use(cors());
 app.use(express.json());
+app.use(express.static("public"));
 
-// API ROUTES
-app.use("/api/auth", authRoutes);
+// ✅ ROUTES (PUT YOUR CODE HERE)
 app.use("/api/user", userRoutes);
 app.use("/api/admin", adminRoutes);
 
-// Serve frontend
-app.use(express.static(path.join(__dirname, "public")));
-
-// Fallback (important for Render)
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
-});
+// ✅ DATABASE CONNECTION
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log("MongoDB connected"))
+  .catch(err => console.log(err));
 
 export default app;
