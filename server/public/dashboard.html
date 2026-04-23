@@ -71,7 +71,7 @@
 <script>
 const API = "https://crypto-app-y5vn.onrender.com";
 
-// ✅ GET USER PROFILE
+// ✅ LOAD USER
 async function loadUser() {
   const token = localStorage.getItem("token");
 
@@ -88,18 +88,19 @@ async function loadUser() {
     });
 
     const data = await res.json();
-
     console.log("USER:", data);
 
     if (!res.ok) {
       alert(data.message);
+      logout();
       return;
     }
 
     document.getElementById("username").innerText = data.email;
     document.getElementById("balance").innerText = "$" + data.balance;
 
-    window.userId = data._id;
+    // ✅ ALWAYS STORE USER ID SAFELY
+    localStorage.setItem("userId", data._id);
 
   } catch (err) {
     console.error(err);
@@ -108,17 +109,22 @@ async function loadUser() {
 
 // ✅ DEPOSIT
 async function deposit() {
+  const token = localStorage.getItem("token");
+  const userId = localStorage.getItem("userId");
   const amount = Number(document.getElementById("depositAmount").value);
+
+  if (!amount || amount <= 0) {
+    alert("Enter valid amount");
+    return;
+  }
 
   const res = await fetch(API + "/api/user/deposit", {
     method: "POST",
     headers: {
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
+      "Authorization": "Bearer " + token // ✅ ADD THIS
     },
-    body: JSON.stringify({
-      userId: window.userId,
-      amount
-    })
+    body: JSON.stringify({ userId, amount })
   });
 
   const data = await res.json();
@@ -129,17 +135,22 @@ async function deposit() {
 
 // ✅ WITHDRAW
 async function withdraw() {
+  const token = localStorage.getItem("token");
+  const userId = localStorage.getItem("userId");
   const amount = Number(document.getElementById("withdrawAmount").value);
+
+  if (!amount || amount <= 0) {
+    alert("Enter valid amount");
+    return;
+  }
 
   const res = await fetch(API + "/api/user/withdraw", {
     method: "POST",
     headers: {
-      "Content-Type": "application/json"
+      "Content-Type": "application/json",
+      "Authorization": "Bearer " + token // ✅ ADD THIS
     },
-    body: JSON.stringify({
-      userId: window.userId,
-      amount
-    })
+    body: JSON.stringify({ userId, amount })
   });
 
   const data = await res.json();
@@ -151,12 +162,10 @@ async function withdraw() {
 // ✅ LOGOUT
 function logout() {
   localStorage.removeItem("token");
+  localStorage.removeItem("userId");
   window.location.href = "index.html";
 }
 
-// LOAD DATA
+// LOAD USER ON PAGE LOAD
 loadUser();
 </script>
-
-</body>
-</html>
