@@ -1,83 +1,50 @@
 <!DOCTYPE html>
 <html>
 <head>
+  <meta charset="UTF-8">
   <title>Admin Panel</title>
-
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial;
-      background: #0b1a33;
-      color: white;
-    }
-
-    h2 {
-      text-align: center;
-      padding: 15px;
-    }
-
-    .card {
-      background: #1c2b4a;
-      margin: 10px;
-      padding: 15px;
-      border-radius: 8px;
-    }
-
-    button {
-      padding: 8px;
-      margin-top: 5px;
-      margin-right: 5px;
-      background: gold;
-      border: none;
-      cursor: pointer;
-    }
-  </style>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<h2>Admin Panel</h2>
+<div class="container">
 
-<div class="card">
-  <h3>All Transactions</h3>
-  <div id="transactions"></div>
-</div>
+  <h2>Admin Panel</h2>
 
-<div class="card">
-  <h3>All Users</h3>
-  <div id="users"></div>
+  <div class="card">
+    <h3>Transactions</h3>
+    <div id="transactions"></div>
+  </div>
+
+  <div class="card">
+    <h3>Users</h3>
+    <div id="users"></div>
+  </div>
+
 </div>
 
 <script>
 const API = "https://crypto-app-y5vn.onrender.com";
-
-// ✅ GET TOKEN
 const token = localStorage.getItem("token");
 
 if (!token) {
-  alert("Login as admin first");
+  alert("Login first");
   window.location.href = "index.html";
 }
 
-// ======================
 // LOAD TRANSACTIONS
-// ======================
 async function loadTransactions() {
   const res = await fetch(API + "/api/admin/transactions", {
-    headers: {
-      "Authorization": "Bearer " + token
-    }
+    headers: { Authorization: "Bearer " + token }
   });
 
   const data = await res.json();
 
   let html = "";
-
   data.forEach(tx => {
     html += `
       <div class="card">
-        <p>User: ${tx.userId}</p>
-        <p>Type: ${tx.type}</p>
-        <p>Amount: $${tx.amount}</p>
+        <p>${tx.type} - $${tx.amount}</p>
         <p>Status: ${tx.status}</p>
 
         <button onclick="approve('${tx._id}')">Approve</button>
@@ -86,66 +53,52 @@ async function loadTransactions() {
     `;
   });
 
-  document.getElementById("transactions").innerHTML = html;
+  transactions.innerHTML = html;
 }
 
-// ======================
 // APPROVE
-// ======================
 async function approve(id) {
   await fetch(API + "/api/admin/approve/" + id, {
     method: "POST",
-    headers: {
-      "Authorization": "Bearer " + token
-    }
+    headers: { Authorization: "Bearer " + token }
   });
 
   loadTransactions();
 }
 
-// ======================
 // REJECT
-// ======================
 async function reject(id) {
   await fetch(API + "/api/admin/reject/" + id, {
     method: "POST",
-    headers: {
-      "Authorization": "Bearer " + token
-    }
+    headers: { Authorization: "Bearer " + token }
   });
 
   loadTransactions();
 }
 
-// ======================
 // LOAD USERS
-// ======================
 async function loadUsers() {
   const res = await fetch(API + "/api/admin/users", {
-    headers: {
-      "Authorization": "Bearer " + token
-    }
+    headers: { Authorization: "Bearer " + token }
   });
 
   const data = await res.json();
 
   let html = "";
-
-  data.forEach(user => {
+  data.forEach(u => {
     html += `
       <div class="card">
-        <p>Email: ${user.email}</p>
-        <p>Balance: $${user.balance}</p>
-        <p>Tier: ${user.tier}</p>
-        <p>Role: ${user.role}</p>
+        <p>${u.email}</p>
+        <p>Balance: $${u.balance}</p>
+        <p>Tier: ${u.tier}</p>
       </div>
     `;
   });
 
-  document.getElementById("users").innerHTML = html;
+  users.innerHTML = html;
 }
 
-// LOAD EVERYTHING
+// INIT
 loadTransactions();
 loadUsers();
 </script>
