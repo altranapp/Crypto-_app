@@ -7,30 +7,28 @@ if (!token) {
   window.location.href = "/";
 }
 
-// Fetch user data
 async function loadDashboard() {
   try {
     const res = await fetch(`${API}/api/user/profile`, {
       headers: {
-        "Authorization": `Bearer ${token}`
+        Authorization: `Bearer ${token}`
       }
     });
 
     const data = await res.json();
 
-    if (!res.ok) {
-      throw new Error(data.message || "Failed");
-    }
+    console.log("PROFILE:", data); // 👈 debug
+
+    if (!res.ok) throw new Error();
 
     document.body.innerHTML = `
       <h1>Dashboard</h1>
-      <p><strong>Email:</strong> ${data.email}</p>
-      <p><strong>Balance:</strong> $${data.balance || 0}</p>
+      <p>Email: ${data.email}</p>
+      <p>Balance: $${data.balance || 0}</p>
       <button onclick="logout()">Logout</button>
     `;
   } catch (err) {
-    console.error(err);
-    alert("Session expired. Login again.");
+    alert("Session expired");
     logout();
   }
 }
