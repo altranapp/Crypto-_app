@@ -1,11 +1,12 @@
 <script>
 const API = "https://crypto-app-y5vn.onrender.com";
 
+<script>
 async function login() {
   const email = document.getElementById("logEmail").value;
   const password = document.getElementById("logPassword").value;
 
-  const res = await fetch(`${API}/api/auth/login`, {
+  const res = await fetch("https://crypto-app-y5vn.onrender.com/api/auth/login", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -15,10 +16,11 @@ async function login() {
 
   const data = await res.json();
 
-  console.log("LOGIN RESPONSE:", data); // 👈 debug
-
   if (res.ok) {
-    localStorage.setItem("token", data.token); // ✅ CRITICAL
+    // 👇 PUT IT HERE
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("userId", data.userId);
+
     window.location.href = "dashboard.html";
   } else {
     alert(data.message);
