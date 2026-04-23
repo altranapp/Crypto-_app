@@ -1,59 +1,16 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <title>Crypto App</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
+<input id="loginEmail" type="email">
+<input id="loginPassword" type="password">
 
-<div class="container">
-  <h2>Crypto Investment</h2>
+<button onclick="login()">Login</button>
 
-  <div class="card">
-    <h3>Register</h3>
-    <input id="regEmail" placeholder="Email">
-    <input id="regPassword" type="password" placeholder="Password">
-    <button onclick="register()">Register</button>
-  </div>
-
-  <div class="card">
-    <h3>Login</h3>
-    <input id="logEmail" placeholder="Email">
-    <input id="logPassword" type="password" placeholder="Password">
-    <button onclick="login()">Login</button>
-  </div>
-</div>
-
-<script>
-const API = "https://crypto-app-y5vn.onrender.com";
-
-// REGISTER
-async function register() {
-  const email = regEmail.value;
-  const password = regPassword.value;
-
-  const res = await fetch(API + "/api/auth/register", {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({ email, password })
-  });
-
-  const data = await res.json();
-  alert(data.message);
-}
-
-// LOGIN
 <script>
 async function login() {
-  const email = document.querySelectorAll("input")[2].value;
-  const password = document.querySelectorAll("input")[3].value;
+  const email = document.getElementById("loginEmail").value;
+  const password = document.getElementById("loginPassword").value;
 
   const res = await fetch("/api/user/login", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
+    headers: {"Content-Type": "application/json"},
     body: JSON.stringify({ email, password })
   });
 
@@ -61,14 +18,9 @@ async function login() {
 
   if (data.token) {
     localStorage.setItem("token", data.token);
-
-    // 🔥 REDIRECT
     window.location.href = "dashboard.html";
   } else {
-    alert(data.message || "Login failed");
+    alert(data.message);
   }
 }
 </script>
-
-</body>
-</html>
