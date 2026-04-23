@@ -1,29 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Crypto App</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="container">
+  <h2>Crypto Investment</h2>
+
+  <div class="card">
+    <h3>Register</h3>
+    <input id="regEmail" placeholder="Email">
+    <input id="regPassword" type="password" placeholder="Password">
+    <button onclick="register()">Register</button>
+  </div>
+
+  <div class="card">
+    <h3>Login</h3>
+    <input id="logEmail" placeholder="Email">
+    <input id="logPassword" type="password" placeholder="Password">
+    <button onclick="login()">Login</button>
+  </div>
+</div>
+
 <script>
 const API = "https://crypto-app-y5vn.onrender.com";
 
-<script>
-async function login() {
-  const email = document.getElementById("logEmail").value;
-  const password = document.getElementById("logPassword").value;
+// REGISTER
+async function register() {
+  const email = regEmail.value;
+  const password = regPassword.value;
 
-  const res = await fetch("https://crypto-app-y5vn.onrender.com/api/auth/login", {
+  const res = await fetch(API + "/api/auth/register", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ email, password })
+  });
+
+  const data = await res.json();
+  alert(data.message);
+}
+
+// LOGIN
+async function login() {
+  const email = logEmail.value;
+  const password = logPassword.value;
+
+  const res = await fetch(API + "/api/auth/login", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
     body: JSON.stringify({ email, password })
   });
 
   const data = await res.json();
 
-  if (res.ok) {
-    // 👇 PUT IT HERE
+  if (data.token) {
     localStorage.setItem("token", data.token);
-    localStorage.setItem("userId", data.userId);
-
     window.location.href = "dashboard.html";
   } else {
     alert(data.message);
   }
 }
 </script>
+
+</body>
+</html>
