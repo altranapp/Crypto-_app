@@ -1,6 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body {
+      background: #0b1d3a;
+      font-family: Arial;
+      color: white;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .card {
+      background: #132a4a;
+      padding: 20px;
+      border-radius: 10px;
+      margin-top: 20px;
+    }
+
+    button {
+      padding: 10px;
+      margin-top: 10px;
+      background: gold;
+      border: none;
+      border-radius: 5px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+
+<body>
+
+<h1>Dashboard</h1>
+
+<div class="card">
+  <h2 id="email">Loading...</h2>
+  <h3>Balance: $<span id="balance">0</span></h3>
+
+  <button onclick="logout()">Logout</button>
+</div>
+
 <script>
 const token = localStorage.getItem("token");
 
+if (!token) {
+  window.location.href = "/";
+}
+
+// FETCH USER DATA
 async function loadUser() {
   const res = await fetch("/api/user/me", {
     headers: {
@@ -10,19 +59,22 @@ async function loadUser() {
 
   const data = await res.json();
 
-  document.getElementById("balance").innerText = "$" + data.balance;
+  if (data.email) {
+    document.getElementById("email").innerText = data.email;
+    document.getElementById("balance").innerText = data.balance;
+  } else {
+    alert("Session expired");
+    logout();
+  }
 }
 
-function selectTier(tier) {
-  fetch("/api/user/tier", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + token
-    },
-    body: JSON.stringify({ tier })
-  }).then(() => alert("Tier selected"));
+function logout() {
+  localStorage.removeItem("token");
+  window.location.href = "/";
 }
 
 loadUser();
 </script>
+
+</body>
+</html>
