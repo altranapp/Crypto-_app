@@ -1,35 +1,11 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Crypto Investment</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-
-<h1>Crypto Investment</h1>
-
-<div class="box">
-  <h2>Register</h2>
-  <input id="regEmail" placeholder="Email">
-  <input id="regPassword" type="password" placeholder="Password">
-  <button onclick="register()">Create Account</button>
-</div>
-
-<div class="box">
-  <h2>Login</h2>
-  <input id="logEmail" placeholder="Email">
-  <input id="logPassword" type="password" placeholder="Password">
-  <button onclick="login()">Login</button>
-</div>
-
-<script src="app.js"></script>
-
 <script>
+const API = "https://crypto-app-y5vn.onrender.com";
+
 async function login() {
   const email = document.getElementById("logEmail").value;
   const password = document.getElementById("logPassword").value;
 
-  const res = await fetch("https://crypto-app-y5vn.onrender.com/api/auth/login", {
+  const res = await fetch(`${API}/api/auth/login`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -39,14 +15,13 @@ async function login() {
 
   const data = await res.json();
 
+  console.log("LOGIN RESPONSE:", data); // 👈 debug
+
   if (res.ok) {
-    localStorage.setItem("token", data.token); // ✅ save token
-    window.location.href = "dashboard.html";   // ✅ go to dashboard
+    localStorage.setItem("token", data.token); // ✅ CRITICAL
+    window.location.href = "dashboard.html";
   } else {
     alert(data.message);
   }
 }
-</script>  
-
-</body>
-</html>
+</script>
