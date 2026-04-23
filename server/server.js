@@ -32,11 +32,10 @@ app.use("/api/kyc", kycRoutes);
 app.use(express.static(path.join(__dirname, "public")));
 
 // ✅ HANDLE FRONTEND ROUTES
-// Only fallback for unknown routes (optional)
+// Optional fallback (safe)
 app.get("*", (req, res) => {
   res.status(404).send("Page not found");
 });
-
 // CONNECT DATABASE + START SERVER
 mongoose.connect(process.env.MONGO_URI)
 .then(() => {
