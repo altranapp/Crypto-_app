@@ -44,13 +44,16 @@ async function register() {
 }
 
 // LOGIN
+<script>
 async function login() {
-  const email = logEmail.value;
-  const password = logPassword.value;
+  const email = document.querySelectorAll("input")[2].value;
+  const password = document.querySelectorAll("input")[3].value;
 
-  const res = await fetch(API + "/api/auth/login", {
+  const res = await fetch("/api/user/login", {
     method: "POST",
-    headers: {"Content-Type": "application/json"},
+    headers: {
+      "Content-Type": "application/json"
+    },
     body: JSON.stringify({ email, password })
   });
 
@@ -58,9 +61,11 @@ async function login() {
 
   if (data.token) {
     localStorage.setItem("token", data.token);
+
+    // 🔥 REDIRECT
     window.location.href = "dashboard.html";
   } else {
-    alert(data.message);
+    alert(data.message || "Login failed");
   }
 }
 </script>
