@@ -24,8 +24,15 @@ mongoose.connect(process.env.MONGO_URI)
 .catch(err => console.log("❌ MongoDB Error:", err));
 
 // Test route
+import path from "path";
+
+const __dirname = new URL('.', import.meta.url).pathname;
+
+// Serve frontend
+app.use(express.static(path.join(__dirname, "public")));
+
 app.get("/", (req, res) => {
-  res.send("API is running...");
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
 // Server
