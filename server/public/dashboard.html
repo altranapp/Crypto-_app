@@ -89,10 +89,9 @@
     let userId = null;
 
     // LOAD USER DATA
-    async function loadDashboard() {
+    <script>
+async function loadDashboard() {
   const token = localStorage.getItem("token");
-
-  console.log("Token:", token);
 
   if (!token) {
     window.location.href = "/";
@@ -106,25 +105,38 @@
       }
     });
 
-    console.log("Response status:", res.status);
+    const text = await res.text(); // 👈 IMPORTANT DEBUG
 
-    const data = await res.json();
-    console.log("Response data:", data);
+    console.log("RAW RESPONSE:", text);
+
+    const data = JSON.parse(text); // safe parse
 
     if (!res.ok) {
-      alert(data.message || "Error loading profile");
+      alert(data.message || "Error");
       return;
     }
 
-    document.getElementById("userEmail").innerText = data.email;
-    document.getElementById("balance").innerText = data.balance;
+    document.body.innerHTML = `
+      <h2 style="color:gold;text-align:center;">Dashboard</h2>
+      <p style="text-align:center;">Email: ${data.email}</p>
+      <p style="text-align:center;">Balance: $${data.balance}</p>
+      <button onclick="logout()">Logout</button>
+    `;
 
   } catch (err) {
-    console.error("ERROR:", err);
-    alert("Dashboard failed to load");
+    console.error("CRASH:", err);
+    alert("Something broke — check console");
   }
 }
 
+function logout() {
+  localStorage.removeItem("token");
+  window.location.href = "/";
+}
+
+loadDashboard();
+</script>
+  
     // DEPOSIT FUNCTION
     async function deposit() {
       const amount = Number(document.getElementById("depositAmount").value);
