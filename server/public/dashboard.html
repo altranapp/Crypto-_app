@@ -2,40 +2,44 @@
 <html>
 <head>
   <title>Dashboard</title>
-  <style>
-    body {
-      background: #0b1a33;
-      color: white;
-      text-align: center;
-      font-family: Arial;
-      padding-top: 50px;
-    }
-
-    button {
-      padding: 10px;
-      background: gold;
-      border: none;
-      width: 200px;
-      margin-top: 20px;
-    }
-  </style>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<h1>Dashboard</h1>
-<p id="status">Loading...</p>
+<div class="container">
 
-<button onclick="logout()">Logout</button>
+  <h1>Crypto Dashboard</h1>
+
+  <div class="card">
+    <p><strong>Email:</strong> <span id="email">Loading...</span></p>
+    <p><strong>Balance:</strong> $<span id="balance">0</span></p>
+  </div>
+
+  <div class="card">
+    <h3>Deposit</h3>
+    <input id="depositAmount" placeholder="Amount">
+    <button onclick="deposit()">Deposit</button>
+  </div>
+
+  <div class="card">
+    <h3>Withdraw</h3>
+    <input id="withdrawAmount" placeholder="Amount">
+    <button onclick="withdraw()">Withdraw</button>
+  </div>
+
+  <button class="logout" onclick="logout()">Logout</button>
+
+</div>
 
 <script>
 const API = "https://crypto-app-y5vn.onrender.com";
-
 const token = localStorage.getItem("token");
 
 if (!token) {
   window.location.href = "/";
 }
 
+// Load user
 async function loadDashboard() {
   try {
     const res = await fetch(`${API}/api/user/profile`, {
@@ -46,23 +50,58 @@ async function loadDashboard() {
 
     const data = await res.json();
 
-    console.log("DATA:", data);
+    document.getElementById("email").innerText = data.email;
+    document.getElementById("balance").innerText = data.balance || 0;
 
-    if (!res.ok) throw new Error("Failed");
+    localStorage.setItem("userId", data._id); // save for deposit
 
-    document.getElementById("status").innerHTML = `
-      Email: ${data.email}<br>
-      Balance: $${data.balance || 0}
-    `;
   } catch (err) {
-    console.error(err);
-    alert("Session expired or error");
+    alert("Session expired");
     logout();
   }
 }
 
+// Deposit
+async function deposit() {
+  const amount = Number(document.getElementById("depositAmount").value);
+  const userId = localStorage.getItem("userId");
+
+  const res = await fetch(`${API}/api/user/deposit`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ userId, amount })
+  });
+
+  const data = await res.json();
+
+  alert(data.message);
+  loadDashboard();
+}
+
+// Withdraw
+async function withdraw() {
+  const amount = Number(document.getElementById("withdrawAmount").value);
+  const userId = localStorage.getItem("userId");
+
+  const res = await fetch(`${API}/api/user/withdraw`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ userId, amount })
+  });
+
+  const data = await res.json();
+
+  alert(data.message);
+  loadDashboard();
+}
+
+// Logout
 function logout() {
-  localStorage.removeItem("token");
+  localStorage.clear();
   window.location.href = "/";
 }
 
