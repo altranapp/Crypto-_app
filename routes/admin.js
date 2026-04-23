@@ -1,27 +1,33 @@
 import express from "express";
 import User from "../models/User.js";
 import Transaction from "../models/Transaction.js";
-import { protect, adminOnly } from "../middleware/auth.js";
 
 const router = express.Router();
 
-// USERS
-router.get("/users", protect, adminOnly, async (req, res) => {
-  res.json(await User.find());
+// GET USERS
+router.get("/users", async (req, res) => {
+  const users = await User.find();
+  res.json(users);
 });
 
-// TRANSACTIONS
-router.get("/transactions", protect, adminOnly, async (req, res) => {
-  res.json(await Transaction.find());
+// GET TRANSACTIONS
+router.get("/transactions", async (req, res) => {
+  const tx = await Transaction.find();
+  res.json(tx);
 });
 
-// APPROVE
-router.post("/approve/:id", protect, adminOnly, async (req, res) => {
+// APPROVE TRANSACTION
+router.post("/approve/:id", async (req, res) => {
   const tx = await Transaction.findById(req.params.id);
   const user = await User.findById(tx.userId);
 
-  if (tx.type === "deposit") user.balance += tx.amount;
-  if (tx.type === "withdraw") user.balance -= tx.amount;
+  if (tx.type === "deposit") {
+    user.balance += tx.amount;
+  }
+
+  if (tx.type === "withdraw") {
+    user.balance -= tx.amount;
+  }
 
   tx.status = "approved";
 
@@ -29,15 +35,6 @@ router.post("/approve/:id", protect, adminOnly, async (req, res) => {
   await tx.save();
 
   res.json({ message: "Approved" });
-});
-
-// REJECT
-router.post("/reject/:id", protect, adminOnly, async (req, res) => {
-  const tx = await Transaction.findById(req.params.id);
-  tx.status = "rejected";
-  await tx.save();
-
-  res.json({ message: "Rejected" });
 });
 
 export default router;
