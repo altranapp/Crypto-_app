@@ -2,44 +2,26 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Dashboard</title>
 
   <style>
     body {
       margin: 0;
       font-family: Arial;
-      background: #0b132b;
+      background: #0b1a33;
       color: white;
     }
 
-    .header {
-      background: #1c2541;
-      padding: 15px;
+    h2 {
       text-align: center;
-      font-size: 20px;
-      font-weight: bold;
-    }
-
-    .container {
-      padding: 20px;
+      padding: 15px;
     }
 
     .card {
-      background: #1c2541;
-      padding: 20px;
-      margin-bottom: 15px;
-      border-radius: 10px;
-    }
-
-    button {
-      width: 100%;
-      padding: 12px;
-      margin-top: 10px;
-      background: gold;
-      border: none;
-      font-weight: bold;
-      cursor: pointer;
+      background: #1c2b4a;
+      margin: 15px;
+      padding: 15px;
+      border-radius: 8px;
     }
 
     input {
@@ -47,44 +29,49 @@
       padding: 10px;
       margin-top: 10px;
     }
+
+    button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      background: gold;
+      border: none;
+      font-weight: bold;
+    }
   </style>
 </head>
-
 <body>
 
-<div class="header">Dashboard</div>
+<h2>Dashboard</h2>
 
-<div class="container">
-
-  <div class="card">
-    <h3>Welcome</h3>
-    <p id="userEmail">Loading...</p>
-  </div>
-
-  <div class="card">
-    <h3>Balance</h3>
-    <p id="balance">$0</p>
-  </div>
-
-  <div class="card">
-    <h3>Deposit</h3>
-    <input type="number" id="depositAmount" placeholder="Amount"/>
-    <button onclick="deposit()">Deposit</button>
-  </div>
-
-  <div class="card">
-    <h3>Withdraw</h3>
-    <input type="number" id="withdrawAmount" placeholder="Amount"/>
-    <button onclick="withdraw()">Withdraw</button>
-  </div>
-
-  <button onclick="logout()">Logout</button>
-
+<div class="card">
+  <h3>Welcome</h3>
+  <p id="username">Loading...</p>
 </div>
+
+<div class="card">
+  <h3>Balance</h3>
+  <p id="balance">$0</p>
+</div>
+
+<div class="card">
+  <h3>Deposit</h3>
+  <input type="number" id="depositAmount" placeholder="Amount">
+  <button onclick="deposit()">Deposit</button>
+</div>
+
+<div class="card">
+  <h3>Withdraw</h3>
+  <input type="number" id="withdrawAmount" placeholder="Amount">
+  <button onclick="withdraw()">Withdraw</button>
+</div>
+
+<button onclick="logout()">Logout</button>
 
 <script>
 const API = "https://crypto-app-y5vn.onrender.com";
 
+// ✅ GET USER PROFILE
 async function loadUser() {
   const token = localStorage.getItem("token");
 
@@ -96,23 +83,32 @@ async function loadUser() {
   try {
     const res = await fetch(API + "/api/user/profile", {
       headers: {
-        Authorization: "Bearer " + token
+        "Authorization": "Bearer " + token
       }
     });
 
-    const user = await res.json();
+    const data = await res.json();
 
-    document.getElementById("userEmail").innerText = user.email;
-    document.getElementById("balance").innerText = "$" + user.balance;
+    console.log("USER:", data);
+
+    if (!res.ok) {
+      alert(data.message);
+      return;
+    }
+
+    document.getElementById("username").innerText = data.email;
+    document.getElementById("balance").innerText = "$" + data.balance;
+
+    window.userId = data._id;
 
   } catch (err) {
-    alert("Session expired");
-    logout();
+    console.error(err);
   }
 }
 
+// ✅ DEPOSIT
 async function deposit() {
-  const amount = document.getElementById("depositAmount").value;
+  const amount = Number(document.getElementById("depositAmount").value);
 
   const res = await fetch(API + "/api/user/deposit", {
     method: "POST",
@@ -120,18 +116,20 @@ async function deposit() {
       "Content-Type": "application/json"
     },
     body: JSON.stringify({
-      userId: localStorage.getItem("userId"),
-      amount: Number(amount)
+      userId: window.userId,
+      amount
     })
   });
 
   const data = await res.json();
   alert(data.message);
+
   loadUser();
 }
 
+// ✅ WITHDRAW
 async function withdraw() {
-  const amount = document.getElementById("withdrawAmount").value;
+  const amount = Number(document.getElementById("withdrawAmount").value);
 
   const res = await fetch(API + "/api/user/withdraw", {
     method: "POST",
@@ -139,21 +137,24 @@ async function withdraw() {
       "Content-Type": "application/json"
     },
     body: JSON.stringify({
-      userId: localStorage.getItem("userId"),
-      amount: Number(amount)
+      userId: window.userId,
+      amount
     })
   });
 
   const data = await res.json();
   alert(data.message);
+
   loadUser();
 }
 
+// ✅ LOGOUT
 function logout() {
-  localStorage.clear();
+  localStorage.removeItem("token");
   window.location.href = "index.html";
 }
 
+// LOAD DATA
 loadUser();
 </script>
 
