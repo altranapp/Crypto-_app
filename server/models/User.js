@@ -1,31 +1,14 @@
 import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema({
-  email: {
-    type: String,
-    required: true,
-    unique: true
-  },
-  password: {
-    type: String,
-    required: true
-  },
-  balance: {
-    type: Number,
-    default: 0
-  },
-  role: {
-    type: String,
-    default: "user"
-  },
-  kycStatus: {
-    type: String,
-    default: "not_submitted"
-  },
-  name: String,
-  country: String,
-  phone: String,
-  sex: String
-}, { timestamps: true });
+  email: String,
+  password: String,
+  balance: { type: Number, default: 0 },
+  role: { type: String, default: "user" },
+  tier: { type: Number, default: 0 },
+  kycStatus: { type: String, default: "pending" },
+  dailyProfitRate: { type: Number, default: 0 },
+  lastProfitTime: { type: Date, default: Date.now }
+});
 
 export default mongoose.model("User", userSchema);
