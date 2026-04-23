@@ -1,11 +1,10 @@
 import mongoose from "mongoose";
 
-const txSchema = new mongoose.Schema({
+const transactionSchema = new mongoose.Schema({
   userId: String,
-  type: String, // deposit, withdraw, profit
+  type: String, // deposit / withdraw
   amount: Number,
-  status: { type: String, default: "pending" },
-  date: { type: Date, default: Date.now }
+  status: { type: String, default: "pending" }
 });
 
-export default mongoose.model("Transaction", txSchema);
+export default mongoose.model("Transaction", transactionSchema);
