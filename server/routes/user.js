@@ -1,96 +1,71 @@
-import jwt from "jsonwebtoken";
 import express from "express";
 import User from "../models/User.js";
+import Transaction from "../models/Transaction.js";
+import { protect } from "../middleware/auth.js";
+import { applyProfit } from "../utils/profit.js";
 
 const router = express.Router();
 
-// ✅ ADD PROFILE ROUTE HERE
-router.get("/profile", async (req, res) => {
-  try {
-    const authHeader = req.headers.authorization;
+const TIERS = {
+  1: { min: 300, rate: 0.02 },
+  2: { min: 500, rate: 0.03 },
+  3: { min: 1000, rate: 0.05 }
+};
 
-    if (!authHeader) {
-      return res.status(401).json({ message: "No token provided" });
-    }
+// PROFILE
+router.get("/profile", protect, async (req, res) => {
+  const user = await User.findById(req.user.id);
 
-    const token = authHeader.split(" ")[1];
+  await applyProfit(user);
 
-    if (!token) {
-      return res.status(401).json({ message: "Invalid token format" });
-    }
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    const user = await User.findById(decoded.id).select("-password");
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    res.json(user);
-
-  } catch (err) {
-    console.error("PROFILE ERROR:", err.message);
-    res.status(401).json({ message: "Token failed" });
-  }
-});
-    
-// Get balance
-router.get("/balance/:id", async (req, res) => {
-  try {
-    const user = await User.findById(req.params.id);
-    res.json({ balance: user.balance });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+  res.json(user);
 });
 
-// Deposit
-router.post("/deposit", async (req, res) => {
-  try {
-    const { userId, amount } = req.body;
+// SELECT TIER
+router.post("/select-tier", protect, async (req, res) => {
+  const { tier } = req.body;
 
-    const user = await User.findById(userId);
-    user.balance += amount;
+  const user = await User.findById(req.user.id);
 
-    await user.save();
+  if (!TIERS[tier]) return res.json({ message: "Invalid tier" });
 
-    res.json({
-      message: "Deposit successful",
-      balance: user.balance,
-    });
-
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+  if (user.balance < TIERS[tier].min) {
+    return res.json({ message: `Minimum $${TIERS[tier].min}` });
   }
+
+  user.tier = tier;
+  user.dailyProfitRate = TIERS[tier].rate;
+  user.lastProfitTime = new Date();
+
+  await user.save();
+
+  res.json({ message: "Tier activated" });
 });
 
-// Withdraw
-router.post("/withdraw", async (req, res) => {
-  try {
-    const { userId, amount } = req.body;
+// REQUEST DEPOSIT
+router.post("/request-deposit", protect, async (req, res) => {
+  const { amount } = req.body;
 
-    const user = await User.findById(userId);
+  await Transaction.create({
+    userId: req.user.id,
+    type: "deposit",
+    amount
+  });
 
-    if (user.kycStatus !== "approved") {
-      return res.status(403).json({ message: "KYC required" });
-    }
+  res.json({ message: "Deposit request sent" });
+});
 
-    if (user.balance < amount) {
-      return res.status(400).json({ message: "Insufficient funds" });
-    }
+// REQUEST WITHDRAW
+router.post("/request-withdraw", protect, async (req, res) => {
+  const { amount } = req.body;
 
-    user.balance -= amount;
-    await user.save();
+  await Transaction.create({
+    userId: req.user.id,
+    type: "withdraw",
+    amount
+  });
 
-    res.json({
-      message: "Withdrawal successful",
-      balance: user.balance,
-    });
-
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+  res.json({ message: "Withdraw request sent" });
 });
 
 export default router;
