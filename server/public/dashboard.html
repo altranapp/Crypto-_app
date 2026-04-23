@@ -1,171 +1,149 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Dashboard</title>
-
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial;
-      background: #0b1a33;
-      color: white;
-    }
-
-    h2 {
-      text-align: center;
-      padding: 15px;
-    }
-
-    .card {
-      background: #1c2b4a;
-      margin: 15px;
-      padding: 15px;
-      border-radius: 8px;
-    }
-
-    input {
-      width: 100%;
-      padding: 10px;
-      margin-top: 10px;
-    }
-
-    button {
-      width: 100%;
-      padding: 10px;
-      margin-top: 10px;
-      background: gold;
-      border: none;
-      font-weight: bold;
-    }
-  </style>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-<h2>Dashboard</h2>
+<div class="container">
 
-<div class="card">
-  <h3>Welcome</h3>
-  <p id="username">Loading...</p>
+  <h2>User Dashboard</h2>
+
+  <div class="card">
+    <h3>Account</h3>
+    <p id="email"></p>
+    <p class="balance" id="balance">$0</p>
+    <p id="tier">Tier: None</p>
+    <p id="profit">Profit: 0%</p>
+  </div>
+
+  <div class="card">
+    <h3>Select Tier</h3>
+    <button onclick="selectTier(1)">Tier 1 ($300)</button>
+    <button onclick="selectTier(2)">Tier 2 ($500)</button>
+    <button onclick="selectTier(3)">Tier 3 ($1000)</button>
+  </div>
+
+  <div class="card">
+    <h3>Deposit</h3>
+    <input id="depositAmount" type="number" placeholder="Amount">
+    <button onclick="deposit()">Request Deposit</button>
+  </div>
+
+  <div class="card">
+    <h3>Withdraw</h3>
+    <input id="withdrawAmount" type="number" placeholder="Amount">
+    <button onclick="withdraw()">Request Withdraw</button>
+  </div>
+
+  <div class="card">
+    <h3>History</h3>
+    <div id="history"></div>
+  </div>
+
+  <button onclick="logout()">Logout</button>
+
 </div>
-
-<div class="card">
-  <h3>Balance</h3>
-  <p id="balance">$0</p>
-</div>
-
-<div class="card">
-  <h3>Deposit</h3>
-  <input type="number" id="depositAmount" placeholder="Amount">
-  <button onclick="deposit()">Deposit</button>
-</div>
-
-<div class="card">
-  <h3>Withdraw</h3>
-  <input type="number" id="withdrawAmount" placeholder="Amount">
-  <button onclick="withdraw()">Withdraw</button>
-</div>
-
-<button onclick="logout()">Logout</button>
 
 <script>
 const API = "https://crypto-app-y5vn.onrender.com";
+const token = localStorage.getItem("token");
 
-// ✅ LOAD USER
+// PROTECT PAGE
+if (!token) window.location.href = "index.html";
+
+// LOAD USER
 async function loadUser() {
-  const token = localStorage.getItem("token");
+  const res = await fetch(API + "/api/user/profile", {
+    headers: { Authorization: "Bearer " + token }
+  });
 
-  if (!token) {
-    window.location.href = "index.html";
-    return;
-  }
+  const data = await res.json();
 
-  try {
-    const res = await fetch(API + "/api/user/profile", {
-      headers: {
-        "Authorization": "Bearer " + token
-      }
-    });
-
-    const data = await res.json();
-    console.log("USER:", data);
-
-    if (!res.ok) {
-      alert(data.message);
-      logout();
-      return;
-    }
-
-    document.getElementById("username").innerText = data.email;
-    document.getElementById("balance").innerText = "$" + data.balance;
-
-    // ✅ ALWAYS STORE USER ID SAFELY
-    localStorage.setItem("userId", data._id);
-
-  } catch (err) {
-    console.error(err);
-  }
+  email.innerText = data.email;
+  balance.innerText = "$" + data.balance;
+  tier.innerText = "Tier: " + (data.tier || "None");
+  profit.innerText = "Profit: " + (data.dailyProfitRate * 100 || 0) + "%";
 }
 
-// ✅ DEPOSIT
+// SELECT TIER
+async function selectTier(tier) {
+  const res = await fetch(API + "/api/user/select-tier", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: "Bearer " + token
+    },
+    body: JSON.stringify({ tier })
+  });
+
+  const data = await res.json();
+  alert(data.message);
+  loadUser();
+}
+
+// DEPOSIT
 async function deposit() {
-  const token = localStorage.getItem("token");
-  const userId = localStorage.getItem("userId");
-  const amount = Number(document.getElementById("depositAmount").value);
+  const amount = Number(depositAmount.value);
 
-  if (!amount || amount <= 0) {
-    alert("Enter valid amount");
-    return;
-  }
-
-  const res = await fetch(API + "/api/user/deposit", {
+  const res = await fetch(API + "/api/user/request-deposit", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Authorization": "Bearer " + token // ✅ ADD THIS
+      Authorization: "Bearer " + token
     },
-    body: JSON.stringify({ userId, amount })
+    body: JSON.stringify({ amount })
   });
 
   const data = await res.json();
   alert(data.message);
-
-  loadUser();
 }
 
-// ✅ WITHDRAW
+// WITHDRAW
 async function withdraw() {
-  const token = localStorage.getItem("token");
-  const userId = localStorage.getItem("userId");
-  const amount = Number(document.getElementById("withdrawAmount").value);
+  const amount = Number(withdrawAmount.value);
 
-  if (!amount || amount <= 0) {
-    alert("Enter valid amount");
-    return;
-  }
-
-  const res = await fetch(API + "/api/user/withdraw", {
+  const res = await fetch(API + "/api/user/request-withdraw", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Authorization": "Bearer " + token // ✅ ADD THIS
+      Authorization: "Bearer " + token
     },
-    body: JSON.stringify({ userId, amount })
+    body: JSON.stringify({ amount })
   });
 
   const data = await res.json();
   alert(data.message);
-
-  loadUser();
 }
 
-// ✅ LOGOUT
+// HISTORY
+async function loadHistory() {
+  const res = await fetch(API + "/api/user/transactions", {
+    headers: { Authorization: "Bearer " + token }
+  });
+
+  const data = await res.json();
+
+  let html = "";
+  data.forEach(tx => {
+    html += `<p>${tx.type} - $${tx.amount} (${tx.status})</p>`;
+  });
+
+  history.innerHTML = html;
+}
+
+// LOGOUT
 function logout() {
   localStorage.removeItem("token");
-  localStorage.removeItem("userId");
   window.location.href = "index.html";
 }
 
-// LOAD USER ON PAGE LOAD
+// INIT
 loadUser();
+loadHistory();
 </script>
+
+</body>
+</html>
