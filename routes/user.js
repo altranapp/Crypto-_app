@@ -1,63 +1,97 @@
+import express from "express";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import Transaction from "../models/Transaction.js";
 
-import express from "express";
-import User from "../models/User.js";
-import Transaction from "../models/Transaction.js";
-import { protect } from "../middleware/auth.js";
-import { applyProfit } from "../utils/profit.js";
-
 const router = express.Router();
 
-const TIERS = {
-  1: { min: 300, rate: 0.02 },
-  2: { min: 500, rate: 0.03 },
-  3: { min: 1000, rate: 0.05 }
-};
+/* =========================
+   🔐 AUTH MIDDLEWARE
+========================= */
+function auth(req, res, next) {
+  try {
+    const token = req.headers.authorization;
 
-// PROFILE
-router.get("/profile", protect, async (req, res) => {
-  const user = await User.findById(req.user.id);
+    if (!token) {
+      return res.status(401).json({ message: "No token" });
+    }
 
-  await applyProfit(user);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded;
 
-  res.json(user);
+    next();
+  } catch (err) {
+    return res.status(401).json({ message: "Invalid token" });
+  }
+}
+
+/* =========================
+   👤 GET USER PROFILE
+   (Used by dashboard loadUser())
+========================= */
+router.get("/me", auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select("-password");
+
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-// SELECT TIER
-router.post("/select-tier", async (req, res) => {
+/* =========================
+   📊 SELECT TIER
+========================= */
+router.post("/tier", auth, async (req, res) => {
   try {
     const { tier } = req.body;
 
-    const token = req.headers.authorization.split(" ")[1];
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const tiers = {
+      1: { min: 300, profit: 2 },
+      2: { min: 500, profit: 3 },
+      3: { min: 1000, profit: 5 }
+    };
 
-    const user = await User.findById(decoded.id);
+    if (!tiers[tier]) {
+      return res.status(400).json({ message: "Invalid tier" });
+    }
+
+    const user = await User.findById(req.user.id);
+
+    if (user.balance < tiers[tier].min) {
+      return res.json({
+        message: `Minimum $${tiers[tier].min} required`
+      });
+    }
+
     user.tier = tier;
+    user.profit = tiers[tier].profit;
 
     await user.save();
 
-    res.json({ message: "Tier selected successfully" });
+    res.json({ message: "Tier activated successfully" });
 
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-
-// DEPOSIT REQUEST
-router.post("/deposit", async (req, res) => {
+/* =========================
+   💰 REQUEST DEPOSIT
+========================= */
+router.post("/deposit", auth, async (req, res) => {
   try {
     const { amount } = req.body;
 
-    const token = req.headers.authorization.split(" ")[1];
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    if (!amount || amount <= 0) {
+      return res.json({ message: "Invalid amount" });
+    }
 
     await Transaction.create({
-      userId: decoded.id,
+      userId: req.user.id,
       type: "deposit",
-      amount
+      amount,
+      status: "pending"
     });
 
     res.json({ message: "Deposit request sent" });
@@ -67,17 +101,47 @@ router.post("/deposit", async (req, res) => {
   }
 });
 
-// REQUEST WITHDRAW
-router.post("/request-withdraw", protect, async (req, res) => {
-  const { amount } = req.body;
+/* =========================
+   💸 REQUEST WITHDRAW
+========================= */
+router.post("/withdraw", auth, async (req, res) => {
+  try {
+    const { amount } = req.body;
 
-  await Transaction.create({
-    userId: req.user.id,
-    type: "withdraw",
-    amount
-  });
+    const user = await User.findById(req.user.id);
 
-  res.json({ message: "Withdraw request sent" });
+    if (amount > user.balance) {
+      return res.json({ message: "Insufficient balance" });
+    }
+
+    await Transaction.create({
+      userId: req.user.id,
+      type: "withdraw",
+      amount,
+      status: "pending"
+    });
+
+    res.json({ message: "Withdraw request sent" });
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+/* =========================
+   📜 TRANSACTION HISTORY
+========================= */
+router.get("/history", auth, async (req, res) => {
+  try {
+    const history = await Transaction.find({
+      userId: req.user.id
+    }).sort({ createdAt: -1 });
+
+    res.json(history);
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 export default router;
