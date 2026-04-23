@@ -25,8 +25,9 @@ mongoose.connect(process.env.MONGO_URI)
 
 // Test route
 import path from "path";
+import { fileURLToPath } from "url";
 
-const __dirname = new URL('.', import.meta.url).pathname;
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Serve frontend
 app.use(express.static(path.join(__dirname, "public")));
