@@ -70,3 +70,39 @@ router.get("/me", async (req, res) => {
     res.json({ message: "Unauthorized" });
   }
 });
+
+// GET ALL DEPOSITS (ADMIN)
+router.get("/admin/deposits", async (req, res) => {
+  try {
+    const deposits = await Deposit.find().sort({ date: -1 });
+    res.json(deposits);
+  } catch (err) {
+    res.json({ message: "Error", error: err.message });
+  }
+});
+
+// APPROVE DEPOSIT
+router.post("/admin/approve/:id", async (req, res) => {
+  try {
+    const deposit = await Deposit.findById(req.params.id);
+
+    if (!deposit) return res.json({ message: "Deposit not found" });
+    if (deposit.status === "approved") {
+      return res.json({ message: "Already approved" });
+    }
+
+    // update user balance
+    const user = await User.findById(deposit.userId);
+    user.balance += deposit.amount;
+    await user.save();
+
+    // mark deposit as approved
+    deposit.status = "approved";
+    await deposit.save();
+
+    res.json({ message: "Deposit approved" });
+
+  } catch (err) {
+    res.json({ message: "Error", error: err.message });
+  }
+});
