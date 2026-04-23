@@ -14,36 +14,39 @@ dotenv.config();
 
 const app = express();
 
-// Fix __dirname (ES modules)
+// Fix __dirname for ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// MIDDLEWARE
+// Middleware
 app.use(cors());
 app.use(express.json());
 
-// ROUTES
+// API ROUTES
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/kyc", kycRoutes);
 
-// 🔥 SERVE FRONTEND (ONLY ONCE)
+// ✅ SERVE FRONTEND (IMPORTANT FIX)
 app.use(express.static(path.join(__dirname, "public")));
 
+// ✅ HANDLE FRONTEND ROUTES
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-// CONNECT DATABASE (LAST)
+// CONNECT DATABASE + START SERVER
 mongoose.connect(process.env.MONGO_URI)
-  .then(() => {
-    console.log("MongoDB Connected");
+.then(() => {
+  console.log("✅ MongoDB Connected");
 
-    app.listen(process.env.PORT || 5000, () => {
-      console.log("Server started");
-    });
-  })
-  .catch(err => {
-    console.log("DB ERROR:", err);
+  const PORT = process.env.PORT || 5000;
+
+  app.listen(PORT, () => {
+    console.log(`🚀 Server running on port ${PORT}`);
   });
+})
+.catch(err => {
+  console.error("❌ DB ERROR:", err);
+});
